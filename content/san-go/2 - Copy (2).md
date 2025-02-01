@@ -1,6 +1,6 @@
 +++
 author = "Hugo Authors"
-title = "thử album"
+title = "thử album 2"
 date = "2019-03-11"
 description = "thu album anh"
 image = "img/san-go/1.jpg"

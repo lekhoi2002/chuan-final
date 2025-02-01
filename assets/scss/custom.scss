@@ -1,0 +1,29 @@
+// Định nghĩa grid cho danh mục bài viết (article list)
+.article-list--grid {
+    display: grid;
+    grid-gap: 1.5rem; // khoảng cách giữa các card, bạn có thể thay đổi hoặc sử dụng biến CSS
+    margin: 1.5rem 0;
+  }
+  
+  // Sử dụng vòng lặp SCSS để tạo các lớp grid với số cột khác nhau.
+  // Bạn có thể thay đổi phạm vi từ 2 đến 6 cột theo nhu cầu.
+  @for $i from 2 through 6 {
+    .grid-col-#{$i} {
+      grid-template-columns: repeat($i, 1fr);
+    }
+  }
+  
+  // Nếu bạn muốn định nghĩa một số kiểu cho từng card, thêm các quy tắc cho .card:
+  .card {
+    background: #fff;
+    border: 1px solid #eaeaea;
+    padding: 1rem;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    transition: box-shadow 0.3s ease;
+    
+    // Một số kiểu hover cho card
+    &:hover {
+      box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+    }
+  }
+  

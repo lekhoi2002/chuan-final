@@ -1,0 +1,59 @@
+{{/* Khởi tạo biến kết quả */}}
+{{ $result := dict "exists" false "permalink" nil "resource" nil "isDefault" false }}
+
+{{/* Lấy tên trường ảnh, mặc định là "image" (có thể được ghi đè qua .Site.Params.featuredImageField) */}}
+{{ $imageField := default "image" .Context.Site.Params.featuredImageField }}
+{{ $imageValue := index .Context.Params $imageField }}
+
+{{ if $imageValue }}
+    <!-- Nếu trang có trường `image` được set -->
+    {{ $result = merge $result (dict "exists" true) }}
+    {{ $url := urls.Parse $imageValue }}
+
+    {{ if or (eq $url.Scheme "http") (eq $url.Scheme "https") }}
+        <!-- Nếu là ảnh bên ngoài -->
+        {{ $result = merge $result (dict "permalink" $imageValue) }}
+    {{ else }}
+        <!-- Nếu là ảnh nội bộ: Tìm ảnh từ thư mục assets/img -->
+        {{ $siteImage := resources.Get (printf "img/%s" $imageValue) }}
+        {{ if $siteImage }}
+            {{ $result = merge $result (dict "permalink" $siteImage.RelPermalink) }}
+            <!-- Nếu file không phải SVG thì gán resource để xử lý ảnh (resize, srcset, …) -->
+            {{ if ne (path.Ext $imageValue) ".svg" }}
+                {{ $result = merge $result (dict "resource" $siteImage) }}
+            {{ end }}
+        {{ else }}
+            <!-- Nếu không tìm thấy ảnh trong assets/img, fallback dùng đường dẫn tương đối -->
+            {{ $result = merge $result (dict "permalink" (relURL $imageValue)) }}
+        {{ end }}
+    {{ end }}
+
+{{ else if and (ne .Type nil) (index .Context.Site.Params.defaultImage .Type) }}
+    <!-- Nếu không có trường image, kiểm tra thiết lập defaultImage theo Type của trang -->
+    {{ $defaultImageSetting := index .Context.Site.Params.defaultImage .Type }}
+
+    {{ if $defaultImageSetting.enabled }}
+        {{ $result = merge $result (dict "isDefault" true) }}
+        {{ $result = merge $result (dict "exists" true) }}
+
+        {{ if $defaultImageSetting.local }}
+            <!-- Nếu default image là local: Tìm ảnh trong assets (không thêm folder img) -->
+            {{ $siteResourceImage := resources.Get $defaultImageSetting.src }}
+            {{ if $siteResourceImage }}
+                {{ $result = merge $result (dict "permalink" $siteResourceImage.RelPermalink) }}
+                {{ $result = merge $result (dict "resource" $siteResourceImage) }}
+            {{ else }}
+                <!-- Báo lỗi nếu không tìm thấy ảnh default -->
+                {{ errorf "Failed loading image: %q" $defaultImageSetting.src }}
+                {{ $result = merge $result (dict "exists" false) }}
+            {{ end }}
+        {{ else }}
+            <!-- Nếu default image là bên ngoài -->
+            {{ $result = merge $result (dict "permalink" (relURL $defaultImageSetting.src)) }}
+        {{ end }}
+        
+    {{ end }}
+
+{{ end }}
+
+{{ return $result }}
